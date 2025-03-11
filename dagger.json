@@ -1,0 +1,13 @@
+{
+  "name": "cypress-test-writer",
+  "engineVersion": "v0.17.0-llm.8",
+  "sdk": {
+    "source": "typescript"
+  },
+  "dependencies": [
+    {
+      "name": "cypress-workspace",
+      "source": "cypress-workspace"
+    }
+  ]
+}
