@@ -7,6 +7,8 @@ This module is an example agent that compares two branches in `git` for a UI cha
 
 https://github.com/user-attachments/assets/0432be8b-08bb-4b2f-9409-f0175cc5bbc2
 
+Check out the longer demo [here](https://youtu.be/UqkRUVQk-4o). 
+
 ### How do I try it?
 
 #### Get a dev Dagger CLI and Engine with LLM support using:
