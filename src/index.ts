@@ -24,14 +24,36 @@ export class CypressTestWriter {
       .withExec(["git", "diff", base])
       .stdout();
     // Create a new workspace, using third-party module
-    let before = dag.cypressWorkspace(project, base, feature);
+    let cypress = dag.cypressWorkspace(project, base, feature);
+		// Prepare environment for the agent
+		let env = dag
+			.env()
+			.withCypressWorkspaceInput(
+				"cypress-node-workspace",
+				cypress,
+				"a fully-loaded Cypress container workspace",
+			)
+			.withStringInput("diff", diff, "git diff output")
+			.withCypressWorkspaceOutput("cypress-with-new-test", "The Cypress workspace with new test written");
+		
     // Run the agent loop in the workspace
-    let after = dag
+    let completed = dag
       .llm()
-      .withCypressWorkspace(before)
-      .withPromptVar("diff", diff)
-      .withPromptFile(dag.currentModule().source().file("prompt.txt"))
-      .cypressWorkspace();
-    return after.container();
+      .withEnv(env)
+      .withPrompt(`
+You are an expert at writing Cypress tests.
+You are given a project in a Cypress/node workspace
+and a git diff between two branches of a project.
+First test the project to ensure all is working.
+Then write a single new Cypress e2e test file to cover the change to the project
+described by the git diff. Run tests again to ensure it is all working.
+When tests are passing, return the workspace.
+<diff>
+${diff}
+</diff>`)
+      .env()
+			.output("cypress-with-new-test")
+			.asCypressWorkspace();
+    return completed.container();
   }
 }

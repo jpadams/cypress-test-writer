@@ -6,7 +6,6 @@ import { dag, Container, Directory, object, func } from "@dagger.io/dagger";
 @object()
 export class CypressWorkspace {
   // The workspace container
-  // +internal-use-only
   @func()
   container: Container;
 
