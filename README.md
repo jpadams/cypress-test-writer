@@ -16,6 +16,11 @@ https://docs.dagger.io/ai-agents#initial-setup
 
 *note: use ENV_VARs or the `.env` file to store your LLM key or a [Dagger Secrets](https://docs.dagger.io/features/secrets/) reference to it. The included example points to a sample [1Password secret reference](https://developer.1password.com/docs/cli/secret-references/).*
 
+#### Speedrun one-liner
+```
+dagger -m github.com/jpadams/cypress-test-writer -c 'cypress-test-update | terminal'
+```
+
 #### $ Load the module into Dagger Shell:
 ```
 git clone https://github.com/jpadams/cypress-test-writer
@@ -24,27 +29,31 @@ cd cypress-test-writer
 dagger
 ```
 
-#### ⋈ Run test update function pointing at a remote (or local) project:
+#### ⋈ Run test update function pointing at a remote git project:
 ```
-cypress-test-update https://github.com/jpadams/hello-dagger-ts
+cypress-test-update
 ```
+
+*note: this will use defaults to run `cypress-test-update --project https://github.com/jpadams/hello-dagger-ts --base main --feature green`*
 
 *note: my example Vue app above is modeled after the [Dagger for CI Quickstart](https://docs.dagger.io/ci/quickstart/) and has `main` and `green` branches to fit the example.*
 
 #### ⋈ Check out your newly written Cypress test in `cypress/e2e/`. The container with generated tests will come from cache and a terminal attached.
 ```
-cypress-test-update https://github.com/jpadams/hello-dagger-ts | terminal
+cypress-test-update | terminal
 ```
 
 *note: Increase verbosity to 2 or 3 (`+` in TUI) and/or view in Dagger Cloud web UI (`w` in TUI) for best results*
 
 ### Fun to try:
-- in `hello-dagger/` get on the `green` branch and run `git diff main`; this diff is what is used to build the new test
+- run tests yourself in the terminal: `npm run test:e2e`
+- in `hello-dagger-ts/` get on the `green` branch and run `git diff main`; this diff is what is used to build the new test
 - check out the `prompt.txt` in `cypress-test-update/`
 - Note that in  https://github.com/jpadams/hello-dagger-ts a `dagger.json` is  present. The app is Daggerized! In the directory try fun things like: `dagger shell -c 'build | up'` (Dagger implementation inside of `.dagger/src/index.ts`)
 
-### Notes:
-- note the `contest:e2e` target in the `package.json`
-  - I used `concurrently` to manage running the dev server and Cypress in one command
-  - I used `--success first` to ensure the test exit code propagated, not the SIGTERM shutdown of the dev server
+### Notes/Caveats/Changes:
 - I am not really a TypeScript dev, so there are likely much better ways to do certain things 😁
+- I changed from a convoluted way of running tests to binding a simple Dagger Service to the Cypress container and running Cypress normally: `npm run test:e2e`
+
+### Todo:
+- Re-record the gif/video

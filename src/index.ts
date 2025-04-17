@@ -9,15 +9,15 @@ export class CypressTestWriter {
    */
   @func()
   async CypressTestUpdate(
-    project: Directory,
-    base: string = "main", // the base git branch
-    feature: string = "green", // the feature git branch to generate test for
+    project: string = "https://github.com/jpadams/hello-dagger-ts",    // The git project under test
+    base: string = "main", // The base git branch
+    feature: string = "green", // The feature git branch to generate test for
 ): Promise<Container> {
     // Get diff of current checkout versus main branch
     let diff = await dag
       .container()
       .from("alpine/git")
-      .withDirectory("/app", project)
+      .withDirectory("/app", dag.git(project).branch(base).tree())
       .withWorkdir("/app")
       .withExec(["git", "fetch"])
       .withExec(["git", "checkout", feature])
@@ -51,9 +51,9 @@ When tests are passing, return the workspace.
 <diff>
 ${diff}
 </diff>`)
-      .env()
-			.output("cypress-with-new-test")
-			.asCypressWorkspace();
+    .env()
+	.output("cypress-with-new-test")
+	.asCypressWorkspace();
     return completed.container();
   }
 }

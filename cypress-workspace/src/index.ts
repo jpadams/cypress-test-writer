@@ -1,17 +1,18 @@
 /**
  * A workspace for Cypress tests
  */
-import { dag, Container, Directory, object, func } from "@dagger.io/dagger";
+import { dag, Container, Directory, Service, object, func } from "@dagger.io/dagger";
 
 @object()
 export class CypressWorkspace {
-  // The workspace container
   @func()
-  container: Container;
+  container: Container; // The workspace container
+  
+  app: Service; // The app service
 
   constructor(
-    // The project under test
-    project: Directory,
+    // The git project under test
+    project: string,
     // The base branch
     base: string,
     // The feature branch
@@ -19,18 +20,28 @@ export class CypressWorkspace {
     // The container image to use
     image = "cypress/included:14.0.3",
   ) {
+    this.app = dag
+      .container()
+      .from("node:latest")  
+      .withEnvVariable("CI", "true")
+      .withDirectory("/app", dag.git(project).branch(feature).tree())
+      .withWorkdir("/app")
+      .withMountedCache("/root/.npm", dag.cacheVolume("npm-cache"))
+      .withExec(["npm", "ci"])
+      .withExposedPort(5173)
+      .asService({args: ["npm", "run", "dev"]});
+
     this.container = dag
       .container()
       .from(image)
-      .withMountedCache("/root/.npm", dag.cacheVolume("npm-cache"))
-      .withDirectory("/app", project)
+      .withDirectory("/app", dag.git(project).branch(feature).tree())
       .withWorkdir("/app")
       .withExec(["git", "fetch"])
       .withExec(["git", "checkout", base]) // ensure base works      
-      .withExec(["git", "checkout", feature])      
+      .withExec(["git", "checkout", feature]) // go back to feature     
+      .withMountedCache("/root/.npm", dag.cacheVolume("npm-cache"))
       .withExec(["npm", "ci"])
-      .withExec(["npm", "install", "-D", "concurrently"])
-      .withExec(["npm", "install", "-D", "vite"]);
+      .withServiceBinding("app", this.app);
   }
 
   /**
@@ -45,7 +56,7 @@ export class CypressWorkspace {
    * Write a file
    */
   @func()
-  async write(path: string, content: string): Promise<CypressWorkspace> {
+  write(path: string, content: string): CypressWorkspace {
     this.container = this.container.withNewFile(path, content);
     return this;
   }
@@ -62,8 +73,8 @@ export class CypressWorkspace {
    * Run the Cypress tests in the workspace
    */
   @func()
-  async test(path: string): Promise<string> {
-    let command: string[] = ["npm", "run", "contest:e2e"];
+  async test(): Promise<string> {
+    let command: string[] = ["npm", "run", "test:e2e"];
     return this.container.withExec(command).stdout();
   }
 }
